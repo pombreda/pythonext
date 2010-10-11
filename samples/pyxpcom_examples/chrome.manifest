@@ -1,0 +1,10 @@
+content pyxpcom_examples jar:pyxpcom_examples.jar!/content/
+skin pyxpcom_examples classic/1.0 jar:pyxpcom_examples.jar!/skin/
+locale pyxpcom_examples en-US jar:pyxpcom_examples.jar!/locale/en-US/
+overlay chrome://browser/content/browser.xul chrome://pyxpcom_examples/content/overlay-firefox.xul
+overlay chrome://songbird/content/xul/menuOverlay.xul chrome://pyxpcom_examples/content/overlay-firefox.xul
+
+# Python XPCOM components
+interfaces components/moz2/pyINTPRequest.xpt
+component {c37c49ee-6f82-48cf-b8bf-f7e3fc34a5c5} components/pyNTPRequest.py
+contract @twhiteman.netfirms.com/pyNTPRequest;1 {c37c49ee-6f82-48cf-b8bf-f7e3fc34a5c5}

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+    <Description about="urn:mozilla:install-manifest">
+    
+        <em:id>pythonext@mozdev.org</em:id>
+        <em:name>PythonExt</em:name>
+        <em:version>$(PYTHONEXT_VERSION)</em:version>
+        <em:description>Python $(PYTHON_VERSION) XPCOM bindings</em:description>
+        $(RDF_TARGET_PLATFORMS)
+        <em:unpack>true</em:unpack>
+
+        <em:creator>Todd Whiteman</em:creator>
+        <em:contributor>Mark Hammond</em:contributor>
+        <em:contributor>Malek Hadj-Ali</em:contributor>
+
+        <em:homepageURL>http://pyxpcomext.mozdev.org</em:homepageURL>
+        <em:iconURL>chrome://pythonext/skin/python-powered_32x32.png</em:iconURL>
+
+        <em:targetApplication>
+            <Description>
+                <!-- XULRunner -->
+                <em:id>toolkit@mozilla.org</em:id>
+                <em:minVersion>2.0b1</em:minVersion>
+                <em:maxVersion>2.*</em:maxVersion>
+            </Description>
+        </em:targetApplication>
+
+    </Description>
+</RDF>

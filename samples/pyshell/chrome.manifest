@@ -1,0 +1,13 @@
+content pyshell jar:pyshell.jar!/content/ xpcnativewrappers=yes
+skin pyshell classic/1.0 jar:pyshell.jar!/skin/
+locale pyshell en-US jar:pyshell.jar!/locale/en-US/
+overlay chrome://browser/content/browser.xul chrome://pyshell/content/overlay-firefox.xul
+overlay chrome://messenger/content/messenger.xul chrome://pyshell/content/overlay-thunderbird.xul
+overlay chrome://komodo/content/komodo.xul chrome://pyshell/content/overlay-komodo.xul
+overlay chrome://explorer/content/explorer.xul chrome://pyshell/content/overlay-xulexplorer.xul
+overlay chrome://songbird/content/xul/menuOverlay.xul chrome://pyshell/content/overlay-firefox.xul
+
+# Need to specify alternative xpt file - as nsIVairant changed from 1.9.x
+interfaces components/moz2/pyIShell.xpt
+component {4e5c9764-d465-4fef-ae24-8032f257d174} components/pyShell.py
+contract @twhiteman.netfirms.com/pyShell;1 {4e5c9764-d465-4fef-ae24-8032f257d174}

@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+
+<!--
+ **** BEGIN LICENSE BLOCK *****
+ *  Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *  
+ *  The contents of this file are subject to the Mozilla Public License
+ *  Version 1.1 (the "License"); you may not use this file except in
+ *  compliance with the License. You may obtain a copy of the License at
+ *  http://www.mozilla.org/MPL/
+ *  
+ *  Software distributed under the License is distributed on an "AS IS"
+ *  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ *  License for the specific language governing rights and limitations
+ *  under the License.
+ *  
+ *  The Original Code is pyxpcomext.mozdev.org code.
+ *  
+ *  The Initial Developer of the Original Code is Todd Whiteman.
+ *  Portions created by the Initial Developer are Copyright (C) 2007-2008.
+ *  All Rights Reserved.
+ *  
+ *  Contributor(s):
+ *    Todd Whiteman
+ *  
+ *  Alternatively, the contents of this file may be used under the terms of
+ *  either the GNU General Public License Version 2 or later (the "GPL"), or
+ *  the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ *  in which case the provisions of the GPL or the LGPL are applicable instead
+ *  of those above. If you wish to allow use of your version of this file only
+ *  under the terms of either the GPL or the LGPL, and not to allow others to
+ *  use your version of this file under the terms of the MPL, indicate your
+ *  decision by deleting the provisions above and replace them with the notice
+ *  and other provisions required by the GPL or the LGPL. If you do not delete
+ *  the provisions above, a recipient may use your version of this file under
+ *  the terms of any one of the MPL, the GPL or the LGPL.
+ *  
+ * **** END LICENSE BLOCK *****
+-->
+
+<!DOCTYPE window SYSTEM "chrome://pyxpcom_examples/locale/pyxpcom_examples.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog id="pyCTypes_window"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="300"
+        height="300"
+        persist="width height"
+        script-type="application/x-python"
+	title="&pyxpcom_examples_menuitem.pyCTypes.label;">
+
+    <script type="application/x-python">
+import sys
+def demo_pyCTypes():
+
+    # Windows
+    if sys.platform.startswith("win32"):
+        # WINUSERAPI int WINAPI
+        # MessageBoxA(
+        #     HWND hWnd ,
+        #     LPCSTR lpText,
+        #     LPCSTR lpCaption,
+        #     UINT uType);
+        from ctypes import c_int, WINFUNCTYPE, windll
+        from ctypes.wintypes import HWND, LPCSTR, UINT
+        prototype = WINFUNCTYPE(c_int, HWND, LPCSTR, LPCSTR, UINT)
+        paramflags = (1, "hwnd", 0), (1, "text", "Hi"), (1, "caption", None), (1, "flags", 0)
+        MessageBox = prototype(("MessageBoxA", windll.user32), paramflags)
+
+        # Call the messagebox function.
+        MessageBox(flags=2, text="foo bar")
+
+    # Linux
+    elif sys.platform.startswith("linux"):
+        from ctypes import cdll
+        from ctypes.util import find_library
+        libc_name = find_library("c")
+        if libc_name:
+            libc = cdll.LoadLibrary(libc_name)
+            # Output to the console.
+            libc.printf("Hello, %s\n", "World!")
+
+    # Mac
+    elif sys.platform.startswith("darwin"):
+        from ctypes import c_char_p
+        window.alert(ctypes.c_char_p(-16 * 4096 + 0x1600).value)
+    </script>
+
+    <vbox flex="1">
+        <groupbox>
+            <caption label="&pyxpcom_examples.pyCTypes.caption;" />
+            <description id="pyCTypes_description">
+                &pyxpcom_examples.pyCTypes.description;
+            </description>
+            <hbox align="center" pack="center">
+                <button id="pyCTypes_demo_button"
+                        label="&pyxpcom_examples.pyCTypes.demo.button;"
+                        oncommand="demo_pyCTypes()" />
+            </hbox>
+        </groupbox>
+    </vbox>
+</dialog>

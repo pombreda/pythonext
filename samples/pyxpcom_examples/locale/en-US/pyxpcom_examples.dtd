@@ -1,0 +1,16 @@
+<!ENTITY pyxpcom_examples.title "Python XPCOM examples">
+<!ENTITY pyxpcom_examples_menuitem.label "PyXPCOM examples">
+<!ENTITY pyxpcom_examples_menuitem.accesskey "P">
+<!ENTITY pyxpcom_examples_menuitem.pyNTPRequest.label "UDP Time Request">
+<!ENTITY pyxpcom_examples_menuitem.pyNTPRequest.accesskey "U">
+<!ENTITY pyxpcom_examples_menuitem.pyCTypes.label "C-Types">
+<!ENTITY pyxpcom_examples_menuitem.pyCTypes.accesskey "C">
+<!ENTITY pyxpcom_examples.pyCTypes.caption "Python ctypes">
+<!ENTITY pyxpcom_examples.pyCTypes.description "Pressing the demo button will make a platform specific ctypes api call. On Windows, this will result in a MessageBox window. For Linux there will be libc.printf call used. Mac (Intel) a specific string will be received from a memory pointer.">
+<!ENTITY pyxpcom_examples.pyCTypes.demo.button "Demo">
+<!ENTITY pyxpcom_examples.pyNTPRequest.caption "Python NTP request">
+<!ENTITY pyxpcom_examples.pyNTPRequest.description "Pressing the 'Request' button will make an asynchronous Python UDP socket request to the 'time.apple.com' NTP time server in order to retrieve the current time.">
+<!ENTITY pyxpcom_examples.pyNTPRequest.time.label "Time: ">
+<!ENTITY pyxpcom_examples.pyNTPRequest.request.button "Request">
+<!ENTITY pyxpcom_examples.pyNTPRequest.request_status.label "Status: ">
+<!ENTITY pyxpcom_examples.pyNTPRequest.close.button "Close">
