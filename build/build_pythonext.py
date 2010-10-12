@@ -175,11 +175,22 @@ class Build(object):
         if sys.platform == "darwin":
             autoconf_exe_name = "autoconf213"
         try:
-            subprocess.check_call([autoconf_exe_name], cwd=abspath("pyxpcom"))
+            if sys.platform.startswith("win"):
+                subprocess.check_call(["sh", autoconf_exe_name],
+                                      cwd=abspath("pyxpcom"))
+            else:
+                subprocess.check_call([autoconf_exe_name],
+                                      cwd=abspath("pyxpcom"))
         except OSError, ex:
             if ex.errno == 2: # No such file or directory.
                 # Try alternative naming.
-                subprocess.check_call(["autoconf-2.13"], cwd=abspath("pyxpcom"))
+                autoconf_exe_name = "autoconf-2.13"
+                if sys.platform.startswith("win"):
+                    subprocess.check_call(["sh", autoconf_exe_name],
+                                          cwd=abspath("pyxpcom"))
+                else:
+                    subprocess.check_call([autoconf_exe_name],
+                                          cwd=abspath("pyxpcom"))
             else:
                 raise
         if exists(pyxpcom_obj_dir):
