@@ -81,6 +81,27 @@ def zip_recursively(zippath, filepaths, basepath,
                     else:
                         zip.write(join(dirpath, filename), arcname)
 
+def unzip_file_into_dir(filepath, dirpath):
+    dirpath = os.path.abspath(dirpath)
+    if not os.path.exists(dirpath):
+        os.mkdir(dirpath, 0777)
+    zfobj = zipfile.ZipFile(filepath)
+    for name in zfobj.namelist():
+        path = os.path.join(dirpath, name)
+        # Check the parent directory exists - make it when it doesn't.
+        parent_path = os.path.dirname(path)
+        mkdir_paths = []
+        while not os.path.exists(parent_path):
+            mkdir_paths.append(parent_path)
+            parent_path = os.path.dirname(parent_path)
+        for parent_path in reversed(mkdir_paths):
+            os.mkdir(parent_path, 0777)
+
+        if path.endswith('/'):
+            os.mkdir(path)
+        else:
+            file(path, 'wb').write(zfobj.read(name))
+
 def trim(path):
     if exists(path):
         if isdir(path) and not islink(path):
@@ -108,9 +129,12 @@ class Build(object):
             filename = "xulrunner%s" % (os.path.splitext(url)[-1])
             try:
                 file(filename, "wb").write(response.read())
-                import tarfile
-                tar = tarfile.open(filename)
-                tar.extractall()
+                if ".zip" in filename:
+                    unzip_file_into_dir(filename, ".")
+                else:
+                    import tarfile
+                    tar = tarfile.open(filename)
+                    tar.extractall()
             finally:
                 if exists(filename):
                     os.remove(filename)
