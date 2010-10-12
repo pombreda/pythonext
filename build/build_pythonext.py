@@ -181,22 +181,25 @@ class Build(object):
             else:
                 subprocess.check_call([autoconf_exe_name],
                                       cwd=abspath("pyxpcom"))
-        except OSError, ex:
-            if ex.errno == 2: # No such file or directory.
-                # Try alternative naming.
-                autoconf_exe_name = "autoconf-2.13"
-                if sys.platform.startswith("win"):
-                    subprocess.check_call(["sh", autoconf_exe_name],
-                                          cwd=abspath("pyxpcom"))
-                else:
-                    subprocess.check_call([autoconf_exe_name],
-                                          cwd=abspath("pyxpcom"))
-            else:
+        except (OSError, subprocess.CalledProcessError), ex:
+            if not isinstance(ex, subprocess.CalledProcessError) and \
+               ex.errno != 2: # No such file or directory.
                 raise
+            # Try alternative naming.
+            autoconf_exe_name = "autoconf-2.13"
+            if sys.platform.startswith("win"):
+                subprocess.check_call(["sh", autoconf_exe_name],
+                                      cwd=abspath("pyxpcom"))
+            else:
+                subprocess.check_call([autoconf_exe_name],
+                                      cwd=abspath("pyxpcom"))
         if exists(pyxpcom_obj_dir):
             shutil.rmtree(pyxpcom_obj_dir)
         os.mkdir(pyxpcom_obj_dir)
-        subprocess.check_call([join("..", "configure"), "--with-libxul-sdk=%s" % (abspath("xulrunner-sdk"))], cwd=pyxpcom_obj_dir)
+        argv = [join("..", "configure"), "--with-libxul-sdk=%s" % (abspath("xulrunner-sdk"))]
+        if sys.platform.startswith("win"):
+            argv = ["sh"] + argv
+        subprocess.check_call(argv, cwd=pyxpcom_obj_dir)
         subprocess.check_call(["make"], cwd=pyxpcom_obj_dir)
 
 
