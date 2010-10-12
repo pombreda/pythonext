@@ -161,10 +161,10 @@ class Build(object):
             shutil.rmtree(pybootstrap_path)
         shutil.copytree(abspath(join("..", "pybootstrap")), pybootstrap_path)
 
-        pydom_stub_path = abspath(join("pyxpcom", "stub_pydom"))
-        if exists(pydom_stub_path):
-            shutil.rmtree(pydom_stub_path)
-        shutil.copytree(abspath(join("..", "stub_pydom")), pydom_stub_path)
+        #pydom_stub_path = abspath(join("pyxpcom", "stub_pydom"))
+        #if exists(pydom_stub_path):
+        #    shutil.rmtree(pydom_stub_path)
+        #shutil.copytree(abspath(join("..", "stub_pydom")), pydom_stub_path)
 
     def configure(self):
         self._pre_configure()
