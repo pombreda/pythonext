@@ -196,7 +196,7 @@ class Build(object):
         if exists(pyxpcom_obj_dir):
             shutil.rmtree(pyxpcom_obj_dir)
         os.mkdir(pyxpcom_obj_dir)
-        argv = [join("..", "configure"), "--with-libxul-sdk=%s" % (abspath("xulrunner-sdk"))]
+        argv = ["/".join(("..", "configure")), "--with-libxul-sdk=%s" % (abspath("xulrunner-sdk"))]
         if sys.platform.startswith("win"):
             argv = ["sh"] + argv
         subprocess.check_call(argv, cwd=pyxpcom_obj_dir)
