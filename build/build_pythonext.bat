@@ -3,8 +3,8 @@ rem run 'cmd /c build_pyext.bat' in your mozilla-build environment
 @echo off
 
 :start
-set _url=http://www.python.org/ftp/python/2.5.2
-set _msi=python-2.5.2.msi
+set _url=http://www.python.org/ftp/python/2.6.5
+set _msi=python-2.6.5.msi
 if exist %_msi% goto extract
 
 :download
