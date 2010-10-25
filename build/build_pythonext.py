@@ -274,11 +274,6 @@ class Build(object):
         self.build_python_dir = join(self.build_bin_dir, "python")
         self.pythonext_python_dir = join(pythonext_dir, "python")
 
-    def _xpidl(self):
-        for idl in glob.glob(join(pythonext_comp_dir, "*.idl")):
-            subprocess.check_call([self.moz_xpidl, "-m", "typelib", "-I", self.moz_idl_dir, "-o", os.path.splitext(idl)[0], idl])
-            os.remove(idl)
-
     def _libs(self):
         shutil.copytree(self.build_python_dir, pythonext_lib_dir)
         shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pyloader"))),
@@ -314,7 +309,6 @@ class Build(object):
         self._skeleton()
         self._install_rdf()
         self._jar()
-        self._xpidl()
         self._libs()
         self._python()
         self._xpi()
