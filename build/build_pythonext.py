@@ -152,7 +152,7 @@ class Build(object):
     def patch(self):
         patches_path = abspath(join("..", "patches", moz_ver_string))
         for filename in glob.glob(join(patches_path, "*.patch")):
-            cmd = "patch -N -p0 -i %s" % filename
+            cmd = "patch -N -p0 < %s" % filename
             subprocess.call(cmd, cwd=abspath("pyxpcom"), shell=True)
 
     def _add_stub(self):
