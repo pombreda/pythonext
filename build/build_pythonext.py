@@ -333,10 +333,10 @@ class WinBuild(Build):
         Build._libs(self)
         shutil.copy(realpath(join(self.build_bin_dir, self._dll_name("pyxpcom"))),
                     join(pythonext_lib_dir, self._dll_name("pyxpcom")))
-        shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
-                    join(pythonext_lib_dir, self._dll_name("pydom")))
-        shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom_stub"))),
-                    join(pythonext_comp_dir, self._dll_name("pydom_stub")))
+        #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
+        #            join(pythonext_lib_dir, self._dll_name("pydom")))
+        #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom_stub"))),
+        #            join(pythonext_comp_dir, self._dll_name("pydom_stub")))
 
     def _python(self):
         Build._python(self)
@@ -411,8 +411,8 @@ class MacBuild(Build):
 
     def _libs(self):
         Build._libs(self)
-        shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
-                    join(pythonext_comp_dir, self._dll_name("pydom")))
+        #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
+        #            join(pythonext_comp_dir, self._dll_name("pydom")))
         shutil.copy(realpath(join(self.build_lib_dir, self._dll_name("pyxpcom"))),
                     join(pythonext_lib_dir, self._dll_name("pyxpcom")))
         python_library_reference = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "Python")
@@ -431,12 +431,12 @@ class MacBuild(Build):
         self._update_lib(join(pythonext_lib_dir, "xpcom", "_xpcom.so"),
                          "@executable_path/libpyxpcom.dylib",
                          "@loader_path/../../pylib/libpyxpcom.dylib")
-        self._update_lib(join(pythonext_comp_dir, self._dll_name("pydom")),
-                         python_library_reference,
-                         "@loader_path/../Frameworks/Python.framework/Versions/%s/Python" % py_ver_dotted)
-        self._update_lib(join(pythonext_comp_dir, self._dll_name("pydom")),
-                         "@executable_path/libpyxpcom.dylib",
-                         "@loader_path/../pylib/libpyxpcom.dylib")
+        #self._update_lib(join(pythonext_comp_dir, self._dll_name("pydom")),
+        #                 python_library_reference,
+        #                 "@loader_path/../Frameworks/Python.framework/Versions/%s/Python" % py_ver_dotted)
+        #self._update_lib(join(pythonext_comp_dir, self._dll_name("pydom")),
+        #                 "@executable_path/libpyxpcom.dylib",
+        #                 "@loader_path/../pylib/libpyxpcom.dylib")
 
     def _python(self):
         Build._python(self)
