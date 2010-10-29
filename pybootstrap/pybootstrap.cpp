@@ -140,7 +140,7 @@ LoadPython(nsILocalFile *pythonPath)
 
 // The following line is the one-and-only "NSModule" symbol exported from this
 // shared library.
-NS_EXPORT const mozilla::Module * NSModule;
+extern "C" { NS_EXPORT const mozilla::Module * NSModule; }
 
 nsresult
 InitializeModule(nsIFile *extensionDir)
