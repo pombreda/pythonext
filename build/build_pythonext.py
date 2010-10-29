@@ -275,6 +275,8 @@ class Build(object):
         self.pythonext_python_dir = join(pythonext_dir, "python")
 
     def _libs(self):
+        if not exists(pythonext_comp_dir):
+            os.mkdir(pythonext_comp_dir)
         shutil.copytree(self.build_python_dir, pythonext_lib_dir)
         shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pyloader"))),
                     join(pythonext_lib_dir, self._dll_name("pyloader")))
