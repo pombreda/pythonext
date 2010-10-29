@@ -238,6 +238,13 @@ class Build(object):
         if exists(pythonext_dir):
             shutil.rmtree(pythonext_dir)
         shutil.copytree(abspath(join("..", "pythonext_skeleton")), pythonext_dir)
+        # Update the manifest file.
+        manifest_path = join(pythonext_dir, "chrome.manifest")
+        content = file(manifest_path, "r").read()
+        for key in ["DLL_PREFIX", "DLL_SUFFIX"]:
+            value = package_conf.get(key)
+            content = content.replace("$(%s)" % key, value)
+        file(manifest_path, "w").write(content)
 
     @property
     def _platform_alias(self):
