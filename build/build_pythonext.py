@@ -13,10 +13,10 @@ import re
 debug = False
 
 xulrunner_link_for_platform = {
-        "win32":          "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-central/xulrunner-2.0b8pre.en-US.win32.sdk.zip",
-        "Darwin-i386":    "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-central/xulrunner-2.0b7pre.en-US.mac-i386.sdk.tar.bz2",
-        "Linux-i686":     "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-central/xulrunner-2.0b8pre.en-US.linux-i686.sdk.tar.bz2",
-        "Linux-x86_64":   "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-central/xulrunner-2.0b8pre.en-US.linux-x86_64.sdk.tar.bz2",
+        "win32":          "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.win32.sdk.zip",
+        "Darwin-i386":    "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.mac-i386.sdk.tar.bz2",
+        "Linux-i686":     "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.linux-i686.sdk.tar.bz2",
+        "Linux-x86_64":   "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
 hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom"}]
