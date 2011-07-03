@@ -13,10 +13,10 @@ import re
 debug = False
 
 xulrunner_link_for_platform = {
-        "win32":          "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.win32.sdk.zip",
-        "Darwin-i386":    "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.mac-i386.sdk.tar.bz2",
-        "Linux-i686":     "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.linux-i686.sdk.tar.bz2",
-        "Linux-x86_64":   "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/2011-02-04-03-mozilla-central/xulrunner-2.0b12pre.en-US.linux-x86_64.sdk.tar.bz2",
+        "win32":          "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.win32.sdk.zip",
+        "Darwin-i386":    "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.mac-i386.sdk.tar.bz2",
+        "Linux-i686":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.linux-i686.sdk.tar.bz2",
+        "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
 hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom"}]
@@ -28,7 +28,7 @@ py_ver_dotted = "%s.%s" % sys.version_info[:2]
 if sys.platform == "darwin":
     py_library_path = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "lib")
 
-moz_ver_string = "mozilla2.0.0"
+patches_directory = "xulrunner-5.0.0"
 
 pyxpcom_obj_dir = abspath(join("pyxpcom", "obj_pyxpcom"))
 
@@ -37,11 +37,10 @@ pythonext_comp_dir = join(pythonext_dir, "components")
 pythonext_lib_dir = join(pythonext_dir, "pylib")
 
 package_conf = {
-    "PYTHONEXT_VERSION": "%s.%s" % (".".join(map(str, sys.version_info[:3])),
-                                    time.strftime("%Y%m%d", time.gmtime())),
+    "MOZ_APP_VERSION": "5.0.0",
+    "PYTHONEXT_VERSION": "5.0.0.%s" % (time.strftime("%Y%m%d", time.gmtime())),
     "PYTHON_VERSION": ".".join(map(str, sys.version_info[:3])),
     "TARGET_PLATFORMS": [],
-    "MOZ_APP_VERSION": "2.0.0",
 }
 
 
@@ -150,7 +149,7 @@ class Build(object):
                 subprocess.check_call(args.split(" "), env=env, **cmd)
 
     def patch(self):
-        patches_path = abspath(join("..", "patches", moz_ver_string))
+        patches_path = abspath(join("..", "patches", patches_directory))
         for filename in glob.glob(join(patches_path, "*.patch")):
             cmd = "patch -N -p0 < %s" % filename
             subprocess.call(cmd, cwd=abspath("pyxpcom"), shell=True)
