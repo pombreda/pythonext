@@ -7,7 +7,7 @@ ARCHITECTURE=`uname -m`
 
 PYTHONMAJOR="2"
 PYTHONMINOR="6"
-PYTHONRELEASE="5"
+PYTHONRELEASE="6"
 PYTHONPRERELEASE=0
 PYTHONMAJORMINOR="${PYTHONMAJOR}.${PYTHONMINOR}"
 PYTHONVERSION="${PYTHONMAJOR}.${PYTHONMINOR}.${PYTHONRELEASE}"
@@ -40,9 +40,11 @@ if [ ! -e "installed" ]; then
         # patch Mac makefile
         #patch -p0 < ../PythonMacMakefile.patch || exit $?
     
+        export MACOSX_DEPLOYMENT_TARGET=10.5
+
         # configure
         # Build Python as a universal framework installation.
-        ./configure --enable-unicode=${UNICODETYPE} --prefix=${INSTALLDIR} --enable-framework=${INSTALLDIR}
+        ./configure --enable-unicode=${UNICODETYPE} --prefix=${INSTALLDIR} --enable-framework=${INSTALLDIR} --enable-universalsdk="/Developer/SDKs/MacOSX10.5.sdk" --with-universal-archs="intel"
     
         # build
         make || exit $?
@@ -79,5 +81,6 @@ fi
 export PATH=${PYTHONHOME}/bin:$PATH
 export PYTHON=${PYTHONHOME}/bin/python
 export LD_LIBRARY_PATH=${PYTHONHOME}/lib
+export
 ${PYTHON} build_pythonext.py
 

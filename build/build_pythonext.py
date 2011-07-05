@@ -14,7 +14,8 @@ debug = False
 
 xulrunner_link_for_platform = {
         "win32":          "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.win32.sdk.zip",
-        "Darwin-i386":    "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.mac-i386.sdk.tar.bz2",
+        "Darwin-x86":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.mac-i386.sdk.tar.bz2",
+        "Darwin-x86_64":  "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.mac-x86_64.sdk.tar.bz2",
         "Linux-i686":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.linux-i686.sdk.tar.bz2",
         "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.linux-x86_64.sdk.tar.bz2",
 }
@@ -29,19 +30,6 @@ if sys.platform == "darwin":
     py_library_path = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "lib")
 
 patches_directory = "xulrunner-5.0.0"
-
-pyxpcom_obj_dir = abspath(join("pyxpcom", "obj_pyxpcom"))
-
-pythonext_dir = abspath("pythonext@mozdev.org")
-pythonext_comp_dir = join(pythonext_dir, "components")
-pythonext_lib_dir = join(pythonext_dir, "pylib")
-
-package_conf = {
-    "MOZ_APP_VERSION": "5.0.0",
-    "PYTHONEXT_VERSION": "5.0.0.%s" % (time.strftime("%Y%m%d", time.gmtime())),
-    "PYTHON_VERSION": ".".join(map(str, sys.version_info[:3])),
-    "TARGET_PLATFORMS": [],
-}
 
 
 def line_strip(line):
@@ -112,20 +100,57 @@ def trim(path):
 class Build(object):
 
     def __init__(self):
-        print "Building python extension\nplatform: %s\nversion: %s" % (sys.platform, sys.version.split("\n")[0])
+        if not hasattr(self, "platform"):
+            self.platform = sys.platform == "win32" and "win32" or "%s-%s" % (os.uname()[0], os.uname()[4])
+        print "Building python extension\n  platform: %s\n  python version: %s" % (self.platform, sys.version.split("\n")[0])
+        self._set_paths()
 
+    def _set_paths(self, basedir=None):
+        if not basedir:
+            basedir = "."
+        self.basedir = abspath(basedir)
+        if not exists(self.basedir):
+            os.mkdir(self.basedir)
+        self.xulrunner_dir = join(self.basedir, "xulrunner-sdk")
+        self.xulrunner_bin_dir = join(self.xulrunner_dir, "bin")
+        self.pyxpcom_dir = join(self.basedir, "pyxpcom")
+        self.pyxpcom_obj_dir = join(self.pyxpcom_dir, "obj_pyxpcom")
+        self.build_bin_dir = join(self.pyxpcom_obj_dir, "dist", "bin")
+        self.moz_xpidl = realpath(join(self.xulrunner_bin_dir, "xpidl"))
+        self.moz_idl_dir = join(self.xulrunner_dir, "idl")
+        self.build_lib_dir = join(self.pyxpcom_obj_dir, "dist", "lib")
+        self.build_comp_dir = join(self.build_bin_dir, "components")
+        self.build_python_dir = join(self.build_bin_dir, "python")
+
+        self.pythonext_dir = join(self.basedir, "pythonext@mozdev.org")
+        self.pythonext_comp_dir = join(self.pythonext_dir, "components")
+        self.pythonext_lib_dir = join(self.pythonext_dir, "pylib")
+        self.pythonext_python_dir = join(self.pythonext_dir, "python")
+
+        self.package_conf = {
+            "MOZ_APP_VERSION": "5.0.0",
+            "PYTHONEXT_VERSION": "5.0.0.%s" % (time.strftime("%Y%m%d", time.gmtime())),
+            "PYTHON_VERSION": ".".join(map(str, sys.version_info[:3])),
+            "TARGET_PLATFORMS": [],
+        }
+
+        try:
+            self._pre_package()
+        except IOError:
+            # pyxpcom not build yet - that's okay - we'll check again later.
+            pass
 
     #---------------------------------------------------------------------------
     # building
     #---------------------------------------------------------------------------
 
     def xulrunner_sdk(self):
-        if not exists("xulrunner-sdk"):
+        if not exists(self.xulrunner_dir):
             import urllib2
-            platform = sys.platform == "win32" and "win32" or "%s-%s" % (os.uname()[0], os.uname()[4])
-            url = xulrunner_link_for_platform.get(platform)
+            url = xulrunner_link_for_platform.get(self.platform)
+            print "self.platform: %r, url: %r" % (self.platform, url)
             response = urllib2.urlopen(url)
-            filename = "xulrunner%s" % (os.path.splitext(url)[-1])
+            filename = join(self.basedir, "xulrunner%s" % (os.path.splitext(url)[-1]))
             try:
                 file(filename, "wb").write(response.read())
                 if ".zip" in filename:
@@ -133,34 +158,37 @@ class Build(object):
                 else:
                     import tarfile
                     tar = tarfile.open(filename)
-                    tar.extractall()
+                    tar.extractall(self.basedir)
             finally:
                 if exists(filename):
                     os.remove(filename)
+        if not exists(self.moz_xpidl):
+            raise Exception("No xpidl found in the XULRunner SDK: %r" % (self.moz_xpidl, ))
 
     def checkout(self):
-        if not exists("pyxpcom"):
+        if not exists(self.pyxpcom_dir):
             env = os.environ.copy()
             for delete_var in ("PYTHON", "PYTHONPATH", "PYTHONHOME", "LD_LIBRARY_PATH"):
                 if delete_var in env:
                     del env[delete_var]
             for cmd in hg_cmds:
                 args = cmd.pop("args")
-                subprocess.check_call(args.split(" "), env=env, **cmd)
+                subprocess.check_call(args.split(" "), cwd=self.basedir,
+                                      env=env, **cmd)
 
     def patch(self):
         patches_path = abspath(join("..", "patches", patches_directory))
         for filename in glob.glob(join(patches_path, "*.patch")):
             cmd = "patch -N -p0 < %s" % filename
-            subprocess.call(cmd, cwd=abspath("pyxpcom"), shell=True)
+            subprocess.call(cmd, cwd=self.pyxpcom_dir, shell=True)
 
     def _add_stub(self):
-        pybootstrap_path = abspath(join("pyxpcom", "pybootstrap"))
+        pybootstrap_path = join(self.pyxpcom_dir, "pybootstrap")
         if exists(pybootstrap_path):
             shutil.rmtree(pybootstrap_path)
         shutil.copytree(abspath(join("..", "pybootstrap")), pybootstrap_path)
 
-        #pydom_stub_path = abspath(join("pyxpcom", "stub_pydom"))
+        #pydom_stub_path = join(self.pyxpcom_dir, "stub_pydom")
         #if exists(pydom_stub_path):
         #    shutil.rmtree(pydom_stub_path)
         #shutil.copytree(abspath(join("..", "stub_pydom")), pydom_stub_path)
@@ -176,10 +204,10 @@ class Build(object):
         try:
             if sys.platform.startswith("win"):
                 subprocess.check_call(["sh", autoconf_exe_name],
-                                      cwd=abspath("pyxpcom"))
+                                      cwd=self.pyxpcom_dir)
             else:
                 subprocess.check_call([autoconf_exe_name],
-                                      cwd=abspath("pyxpcom"))
+                                      cwd=self.pyxpcom_dir)
         except (OSError, subprocess.CalledProcessError), ex:
             if not isinstance(ex, subprocess.CalledProcessError) and \
                ex.errno != 2: # No such file or directory.
@@ -188,18 +216,18 @@ class Build(object):
             autoconf_exe_name = "autoconf-2.13"
             if sys.platform.startswith("win"):
                 subprocess.check_call(["sh", autoconf_exe_name],
-                                      cwd=abspath("pyxpcom"))
+                                      cwd=self.pyxpcom_dir)
             else:
                 subprocess.check_call([autoconf_exe_name],
-                                      cwd=abspath("pyxpcom"))
-        if exists(pyxpcom_obj_dir):
-            shutil.rmtree(pyxpcom_obj_dir)
-        os.mkdir(pyxpcom_obj_dir)
-        argv = ["/".join(("..", "configure")), "--with-libxul-sdk=%s" % (abspath("xulrunner-sdk"))]
+                                      cwd=self.pyxpcom_dir)
+        if exists(self.pyxpcom_obj_dir):
+            shutil.rmtree(self.pyxpcom_obj_dir)
+        os.mkdir(self.pyxpcom_obj_dir)
+        argv = ["/".join(("..", "configure")), "--with-libxul-sdk=%s" % (self.xulrunner_dir)]
         if sys.platform.startswith("win"):
             argv = ["sh"] + argv
-        subprocess.check_call(argv, cwd=pyxpcom_obj_dir)
-        subprocess.check_call(["make"], cwd=pyxpcom_obj_dir)
+        subprocess.check_call(argv, cwd=self.pyxpcom_obj_dir)
+        subprocess.check_call(["make"], cwd=self.pyxpcom_obj_dir)
 
 
     #---------------------------------------------------------------------------
@@ -207,87 +235,77 @@ class Build(object):
     #---------------------------------------------------------------------------
 
     def _dll_name(self, name):
-        return "%s%s%s" % (package_conf["DLL_PREFIX"], name, package_conf["DLL_SUFFIX"])
+        return "%s%s%s" % (self.package_conf["DLL_PREFIX"], name, self.package_conf["DLL_SUFFIX"])
 
     def _pre_package(self, filename=None):
-        filename = filename or join(pyxpcom_obj_dir, "config", "autoconf.mk")
+        filename = filename or join(self.pyxpcom_obj_dir, "config", "autoconf.mk")
         autoconf = open(filename, "r")
         os_target = None
         target_xpcom_abi = None
+        self.package_conf["TARGET_PLATFORMS"] = []
         for line in autoconf:
             if not os_target and line.startswith("OS_TARGET"):
                 os_target = line_strip(line)[1]
             if not target_xpcom_abi and line.startswith("TARGET_XPCOM_ABI"):
                 target_xpcom_abi = line_strip(line)[1]
-            if not package_conf.has_key("MOZ_APP_VERSION") and line.startswith("MOZ_APP_VERSION"):
-                package_conf.update((line_strip(line),))
-            if not package_conf.has_key("DLL_PREFIX") and line.startswith("DLL_PREFIX"):
-                package_conf.update((line_strip(line),))
-            if not package_conf.has_key("DLL_SUFFIX") and line.startswith("DLL_SUFFIX"):
-                package_conf.update((line_strip(line),))
+            if not self.package_conf.has_key("MOZ_APP_VERSION") and line.startswith("MOZ_APP_VERSION"):
+                self.package_conf.update((line_strip(line),))
+            if not self.package_conf.has_key("DLL_PREFIX") and line.startswith("DLL_PREFIX"):
+                self.package_conf.update((line_strip(line),))
+            if not self.package_conf.has_key("DLL_SUFFIX") and line.startswith("DLL_SUFFIX"):
+                self.package_conf.update((line_strip(line),))
         autoconf.close()
         if not (os_target and target_xpcom_abi):
             raise Exception("could not determine target platform")
-        package_conf["TARGET_PLATFORMS"].append("_".join((os_target, target_xpcom_abi)))
+        self.package_conf["TARGET_PLATFORMS"].append("_".join((os_target, target_xpcom_abi)))
         for key in ["MOZ_APP_VERSION", "DLL_PREFIX", "DLL_SUFFIX"]:
-            if not package_conf.has_key(key):
+            if not self.package_conf.has_key(key):
                 raise Exception("could not detemine %s" % key)
 
     def _skeleton(self):
-        if exists(pythonext_dir):
-            shutil.rmtree(pythonext_dir)
-        shutil.copytree(abspath(join("..", "pythonext_skeleton")), pythonext_dir)
+        if exists(self.pythonext_dir):
+            shutil.rmtree(self.pythonext_dir)
+        shutil.copytree(abspath(join("..", "pythonext_skeleton")), self.pythonext_dir)
         # Update the manifest file.
-        manifest_path = join(pythonext_dir, "chrome.manifest")
+        manifest_path = join(self.pythonext_dir, "chrome.manifest")
         content = file(manifest_path, "r").read()
         for key in ["DLL_PREFIX", "DLL_SUFFIX"]:
-            value = package_conf.get(key)
+            value = self.package_conf.get(key)
             content = content.replace("$(%s)" % key, value)
         file(manifest_path, "w").write(content)
 
     @property
     def _platform_alias(self):
-        plat = package_conf["TARGET_PLATFORMS"][0]
-        if len(package_conf["TARGET_PLATFORMS"]) > 1:
-            plat = "_".join((package_conf["TARGET_PLATFORMS"][0].split("_")[0], "universal"))
+        plat = self.package_conf["TARGET_PLATFORMS"][0]
+        if len(self.package_conf["TARGET_PLATFORMS"]) > 1:
+            plat = "_".join((self.package_conf["TARGET_PLATFORMS"][0].split("_")[0], "universal"))
         return plat
 
     def _install_rdf(self):
-        package_conf["RDF_TARGET_PLATFORMS"] = ""
-        for target in package_conf["TARGET_PLATFORMS"]:
-            package_conf["RDF_TARGET_PLATFORMS"] += "\n        <em:targetPlatform>%s</em:targetPlatform>" % target
-        install_rdf_path = abspath(join(pythonext_dir, "install.rdf"))
+        self.package_conf["RDF_TARGET_PLATFORMS"] = ""
+        for target in self.package_conf["TARGET_PLATFORMS"]:
+            self.package_conf["RDF_TARGET_PLATFORMS"] += "\n        <em:targetPlatform>%s</em:targetPlatform>" % target
+        install_rdf_path = abspath(join(self.pythonext_dir, "install.rdf"))
         content = file(install_rdf_path, "r").read()
         for key in ["PYTHONEXT_VERSION", "PYTHON_VERSION",
                     "RDF_TARGET_PLATFORMS", "MOZ_APP_VERSION"]:
-            value = package_conf.get(key)
+            value = self.package_conf.get(key)
             content = content.replace("$(%s)" % key, value)
         file(install_rdf_path, "w").write(content)
 
     def _jar(self):
-        skin_dir = join(pythonext_dir, "skin")
-        zip_recursively(join(pythonext_dir, "pythonext.jar"), [skin_dir], basepath=pythonext_dir, compression=zipfile.ZIP_STORED)
+        skin_dir = join(self.pythonext_dir, "skin")
+        zip_recursively(join(self.pythonext_dir, "pythonext.jar"), [skin_dir], basepath=self.pythonext_dir, compression=zipfile.ZIP_STORED)
         shutil.rmtree(skin_dir)
 
-    def _set_paths(self):
-        xulrunner_dir = abspath("xulrunner-sdk")
-        self.xulrunner_bin_dir = join(xulrunner_dir, "bin")
-        self.build_bin_dir = join(pyxpcom_obj_dir, "dist", "bin")
-        self.moz_xpidl = realpath(join(self.xulrunner_bin_dir, "xpidl"))
-        self.moz_idl_dir = join(xulrunner_dir, "idl")
-        self.build_lib_dir = join(pyxpcom_obj_dir, "dist", "lib")
-        self.build_comp_dir = join(self.build_bin_dir, "components")
-        self.build_python_dir = join(self.build_bin_dir, "python")
-        self.pythonext_python_dir = join(pythonext_dir, "python")
-
     def _libs(self):
-        if not exists(pythonext_comp_dir):
-            os.mkdir(pythonext_comp_dir)
-        shutil.copytree(self.build_python_dir, pythonext_lib_dir)
+        if not exists(self.pythonext_comp_dir):
+            os.mkdir(self.pythonext_comp_dir)
+        shutil.copytree(self.build_python_dir, self.pythonext_lib_dir)
         shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pyloader"))),
-                    join(pythonext_lib_dir, self._dll_name("pyloader")))
+                    join(self.pythonext_lib_dir, self._dll_name("pyloader")))
         shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pybootstrap"))),
-                    join(pythonext_comp_dir, self._dll_name("pybootstrap")))
+                    join(self.pythonext_comp_dir, self._dll_name("pybootstrap")))
 
     def _python(self):
         shutil.copytree(py_install_path, self.pythonext_python_dir, symlinks=True)
@@ -308,11 +326,10 @@ class Build(object):
         shutil.rmtree(self.pythonext_python_lib_dir)
 
     def _xpi(self):
-        filename = "pythonext-%s-%s.xpi" % (package_conf["PYTHONEXT_VERSION"], self._platform_alias)
-        zip_recursively(filename, [pythonext_dir], abspath(pythonext_dir), compression=zipfile.ZIP_DEFLATED)
+        filename = join(self.basedir, "pythonext-%s-%s.xpi" % (self.package_conf["PYTHONEXT_VERSION"], self._platform_alias))
+        zip_recursively(filename, [self.pythonext_dir], self.pythonext_dir, compression=zipfile.ZIP_DEFLATED)
 
     def package(self):
-        self._set_paths()
         self._pre_package()
         self._skeleton()
         self._install_rdf()
@@ -327,18 +344,18 @@ class WinBuild(Build):
     def _pre_configure(self):
         os.environ["PYTHON"] = join(py_install_path, "python.exe").replace("\\", "/")
 
-    def _set_paths(self):
-        Build._set_paths(self)
+    def _set_paths(self, basedir=None):
+        Build._set_paths(self, basedir=basedir)
         self.pythonext_python_lib_dir = join(self.pythonext_python_dir, "Lib")
 
     def _libs(self):
         Build._libs(self)
         shutil.copy(realpath(join(self.build_bin_dir, self._dll_name("pyxpcom"))),
-                    join(pythonext_lib_dir, self._dll_name("pyxpcom")))
+                    join(self.pythonext_lib_dir, self._dll_name("pyxpcom")))
         #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
-        #            join(pythonext_lib_dir, self._dll_name("pydom")))
+        #            join(self.pythonext_lib_dir, self._dll_name("pydom")))
         #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom_stub"))),
-        #            join(pythonext_comp_dir, self._dll_name("pydom_stub")))
+        #            join(self.pythonext_comp_dir, self._dll_name("pydom_stub")))
 
     def _python(self):
         Build._python(self)
@@ -367,18 +384,18 @@ class LinBuild(Build):
         os.environ["PYTHON"] = join(py_install_path, "bin", "python")
         os.environ["LD_LIBRARY_PATH"] = py_library_path
 
-    def _set_paths(self):
-        Build._set_paths(self)
+    def _set_paths(self, basedir=None):
+        Build._set_paths(self, basedir=basedir)
         self.pythonext_python_lib_dir = join(self.pythonext_python_dir, "lib", "python%s" % py_ver_dotted)
 
     def _libs(self):
         Build._libs(self)
         shutil.copy(realpath(join(self.build_lib_dir, self._dll_name("pyxpcom"))),
-                    join(pythonext_lib_dir, self._dll_name("pyxpcom")))
+                    join(self.pythonext_lib_dir, self._dll_name("pyxpcom")))
         #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
-        #            join(pythonext_lib_dir, self._dll_name("pydom")))
+        #            join(self.pythonext_lib_dir, self._dll_name("pydom")))
         #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom_stub"))),
-        #            join(pythonext_comp_dir, self._dll_name("pydom_stub")))
+        #            join(self.pythonext_comp_dir, self._dll_name("pydom_stub")))
 
     def _python(self):
         Build._python(self)
@@ -392,6 +409,18 @@ class LinBuild(Build):
 
 class MacBuild(Build):
 
+    def _pre_configure(self):
+        os.environ["PYTHON"] = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "bin", "python")
+        os.environ["DYLD_LIBRARY_PATH"] = py_library_path
+
+    def _pre_package(self):
+        Build._pre_package(self, join(self.pyxpcom_obj_dir, "config", "autoconf.mk"))
+
+    def _set_paths(self, basedir=None):
+        Build._set_paths(self, basedir=basedir)
+        self.pythonext_python_dir = join(self.pythonext_dir, "Frameworks")
+        self.pythonext_python_lib_dir = join(self.pythonext_python_dir, "Python.framework", "Versions", py_ver_dotted, "lib", "python%s" % py_ver_dotted)
+
     def _update_lib(self, filename, old_library, new_library):
         import stat
         permissions = stat.S_IMODE(os.stat(filename).st_mode)
@@ -399,44 +428,32 @@ class MacBuild(Build):
             os.chmod(filename, permissions | stat.S_IWRITE)
         subprocess.check_call(["install_name_tool", "-change", old_library, new_library, filename])
 
-    def _pre_configure(self):
-        os.environ["PYTHON"] = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "bin", "python")
-        os.environ["DYLD_LIBRARY_PATH"] = py_library_path
-
-    def _pre_package(self):
-        Build._pre_package(self, join(pyxpcom_obj_dir, "config", "autoconf.mk"))
-
-    def _set_paths(self):
-        Build._set_paths(self)
-        self.pythonext_python_dir = join(pythonext_dir, "Frameworks")
-        self.pythonext_python_lib_dir = join(self.pythonext_python_dir, "Python.framework", "Versions", py_ver_dotted, "lib", "python%s" % py_ver_dotted)
-
     def _libs(self):
         Build._libs(self)
         #shutil.copy(realpath(join(self.build_comp_dir, self._dll_name("pydom"))),
-        #            join(pythonext_comp_dir, self._dll_name("pydom")))
+        #            join(self.pythonext_comp_dir, self._dll_name("pydom")))
         shutil.copy(realpath(join(self.build_lib_dir, self._dll_name("pyxpcom"))),
-                    join(pythonext_lib_dir, self._dll_name("pyxpcom")))
+                    join(self.pythonext_lib_dir, self._dll_name("pyxpcom")))
         python_library_reference = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "Python")
-        self._update_lib(join(pythonext_lib_dir, self._dll_name("pyxpcom")),
+        self._update_lib(join(self.pythonext_lib_dir, self._dll_name("pyxpcom")),
                          python_library_reference,
                          "@loader_path/../Frameworks/Python.framework/Versions/%s/Python" % py_ver_dotted)
-        self._update_lib(join(pythonext_lib_dir, self._dll_name("pyloader")),
+        self._update_lib(join(self.pythonext_lib_dir, self._dll_name("pyloader")),
                          python_library_reference,
                          "@loader_path/../Frameworks/Python.framework/Versions/%s/Python" % py_ver_dotted)
-        self._update_lib(join(pythonext_lib_dir, self._dll_name("pyloader")),
+        self._update_lib(join(self.pythonext_lib_dir, self._dll_name("pyloader")),
                          "@executable_path/libpyxpcom.dylib",
                          "@loader_path/../pylib/libpyxpcom.dylib")
-        self._update_lib(join(pythonext_lib_dir, "xpcom", "_xpcom.so"),
+        self._update_lib(join(self.pythonext_lib_dir, "xpcom", "_xpcom.so"),
                          python_library_reference,
                          "@loader_path/../../Frameworks/Python.framework/Versions/%s/Python" % py_ver_dotted)
-        self._update_lib(join(pythonext_lib_dir, "xpcom", "_xpcom.so"),
+        self._update_lib(join(self.pythonext_lib_dir, "xpcom", "_xpcom.so"),
                          "@executable_path/libpyxpcom.dylib",
                          "@loader_path/../../pylib/libpyxpcom.dylib")
-        #self._update_lib(join(pythonext_comp_dir, self._dll_name("pydom")),
+        #self._update_lib(join(self.pythonext_comp_dir, self._dll_name("pydom")),
         #                 python_library_reference,
         #                 "@loader_path/../Frameworks/Python.framework/Versions/%s/Python" % py_ver_dotted)
-        #self._update_lib(join(pythonext_comp_dir, self._dll_name("pydom")),
+        #self._update_lib(join(self.pythonext_comp_dir, self._dll_name("pydom")),
         #                 "@executable_path/libpyxpcom.dylib",
         #                 "@loader_path/../pylib/libpyxpcom.dylib")
 
@@ -457,33 +474,115 @@ class MacBuild(Build):
             shutil.copytree(join(python_lib_path, dirpath), join(self.pythonext_python_lib_dir, dirpath))
 
 
+class MacBuild_x86(MacBuild):
+
+    platform = 'Darwin-x86'
+
+    def _set_paths(self):
+        MacBuild._set_paths(self, "x86")
+
+    def _pre_configure(self):
+        MacBuild._pre_configure(self)
+        os.environ["CFLAGS"] = "-arch i386"
+        os.environ["CXXFLAGS"] = "-arch i386"
+        os.environ["LDFLAGS"] = "-arch i386"
+
+
+class MacBuild_x86_64(MacBuild):
+
+    platform = 'Darwin-x86_64'
+
+    def _set_paths(self):
+        MacBuild._set_paths(self, "x86_64")
+
+    def _pre_configure(self):
+        MacBuild._pre_configure(self)
+        os.environ["CFLAGS"] = "-arch x86_64"
+        os.environ["CXXFLAGS"] = "-arch x86_64"
+        os.environ["LDFLAGS"] = "-arch x86_64"
+
+    def _pre_package(self):
+        MacBuild._pre_package(self)
+        plat = self.package_conf["TARGET_PLATFORMS"][0]
+        if '64' not in plat:
+            plat = plat.replace('x86', 'x86_64')
+            self.package_conf["TARGET_PLATFORMS"][0] = plat
+
+class MacBuild_Universal(MacBuild):
+
+    platform = 'Darwin-universal'
+
+    def _install_rdf(self):
+        install_rdf_path = join(self.pythonext_dir, "install.rdf")
+        if exists(install_rdf_path):
+            os.remove(install_rdf_path)
+        shutil.copy(abspath(join("..", "pythonext_skeleton", "install.rdf")), install_rdf_path)
+        MacBuild._install_rdf(self)
+
+    def package(self, builds):
+        assert(len(builds) == 2)
+        build1 = builds[0]
+        build2 = builds[1]
+
+        self.package_conf["TARGET_PLATFORMS"] = [build1.package_conf["TARGET_PLATFORMS"][0],
+                                                 build2.package_conf["TARGET_PLATFORMS"][0]]
+        
+        if exists(self.pythonext_dir):
+            shutil.rmtree(self.pythonext_dir)
+        shutil.copytree(build1.pythonext_dir, self.pythonext_dir)
+
+        librelpaths = [
+            join("components", "libpybootstrap.dylib"),
+            join("pylib", "libpyloader.dylib"),
+            join("pylib", "libpyxpcom.dylib"),
+            join("pylib", "xpcom", "_xpcom.so"),
+        ]
+        for librelpath in librelpaths:
+            lib1 = join(build1.pythonext_dir, librelpath)
+            lib2 = join(build2.pythonext_dir, librelpath)
+            lib3 = join(self.pythonext_dir, librelpath)
+            cmd = ["lipo", "-create", lib1, lib2, "-output", lib3]
+            subprocess.check_call(cmd, cwd=self.basedir)
+
+        self._install_rdf()
+        self._xpi()
+
 def main():
     if sys.platform.startswith("win"):
-        build = WinBuild()
+        builds = [WinBuild()]
     elif sys.platform.startswith("linux"):
-        build = LinBuild()
+        builds = [LinBuild()]
     elif sys.platform.startswith("darwin"):
-        build = MacBuild()
+        builds = [MacBuild_x86_64(), MacBuild_x86()]
     else:
         sys.exit("Abort: platform '%s' not supported" % sys.platform)
 
-    # download xulrunner
-    build.xulrunner_sdk()
+    for build in builds:
+    
+        # download xulrunner
+        if isinstance(build, MacBuild_x86) and not exists(build.moz_xpidl) and \
+           len(builds) == 2:
+            # Need to copy xpidl from the 64-bit xulrunner-sdk.
+            shutil.copy(builds[0].moz_xpidl, build.moz_xpidl)
+        build.xulrunner_sdk()
+    
+        # checkout
+        build.checkout()
+    
+        # patch
+        build.patch()
+    
+        # configure
+        build.configure()
+    
+        # build
+        build.build()
+    
+        # package
+        build.package()
 
-    # checkout
-    build.checkout()
-
-    # patch
-    build.patch()
-
-    # configure
-    build.configure()
-
-    # build
-    build.build()
-
-    # package
-    build.package()
+    if sys.platform.startswith("darwin") and len(builds) > 1:
+        MacBuild_Universal().package(builds)
 
 
 if __name__ == "__main__":
