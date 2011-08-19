@@ -12,12 +12,14 @@ import re
 
 debug = False
 
+XULRUNNER_SDK_VERSION = "6.0.0"
+
 xulrunner_link_for_platform = {
-        "win32":          "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.win32.sdk.zip",
-        "Darwin-x86":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.mac-i386.sdk.tar.bz2",
-        "Darwin-x86_64":  "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.mac-x86_64.sdk.tar.bz2",
-        "Linux-i686":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.linux-i686.sdk.tar.bz2",
-        "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/5.0/sdk/xulrunner-5.0.en-US.linux-x86_64.sdk.tar.bz2",
+        "win32":          "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/6.0/sdk/xulrunner-6.0.en-US.win32.sdk.zip",
+        "Darwin-x86":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/6.0/sdk/xulrunner-6.0.en-US.mac-i386.sdk.tar.bz2",
+        "Darwin-x86_64":  "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/6.0/sdk/xulrunner-6.0.en-US.mac-x86_64.sdk.tar.bz2",
+        "Linux-i686":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/6.0/sdk/xulrunner-6.0.en-US.linux-i686.sdk.tar.bz2",
+        "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/6.0/sdk/xulrunner-6.0.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
 hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom"}]
@@ -29,7 +31,7 @@ py_ver_dotted = "%s.%s" % sys.version_info[:2]
 if sys.platform == "darwin":
     py_library_path = join(py_install_path, "Python.framework", "Versions", py_ver_dotted, "lib")
 
-patches_directory = "xulrunner-5.0.0"
+patches_directory = "xulrunner-%s" % (XULRUNNER_SDK_VERSION, )
 
 
 def line_strip(line):
@@ -128,8 +130,8 @@ class Build(object):
         self.pythonext_python_dir = join(self.pythonext_dir, "python")
 
         self.package_conf = {
-            "MOZ_APP_VERSION": "5.0.0",
-            "PYTHONEXT_VERSION": "5.0.0.%s" % (time.strftime("%Y%m%d", time.gmtime())),
+            "MOZ_APP_VERSION": "%s" % (XULRUNNER_SDK_VERSION, ),
+            "PYTHONEXT_VERSION": "%s.%s" % (XULRUNNER_SDK_VERSION, time.strftime("%Y%m%d", time.gmtime())),
             "PYTHON_VERSION": ".".join(map(str, sys.version_info[:3])),
             "TARGET_PLATFORMS": [],
         }
