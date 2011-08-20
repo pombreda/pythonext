@@ -164,8 +164,6 @@ class Build(object):
             finally:
                 if exists(filename):
                     os.remove(filename)
-        if not exists(self.moz_xpidl):
-            raise Exception("No xpidl found in the XULRunner SDK: %r" % (self.moz_xpidl, ))
 
     def checkout(self):
         if not exists(self.pyxpcom_dir):
@@ -562,11 +560,13 @@ def main():
     for build in builds:
     
         # download xulrunner
+        build.xulrunner_sdk()
         if isinstance(build, MacBuild_x86) and not exists(build.moz_xpidl) and \
            len(builds) == 2:
             # Need to copy xpidl from the 64-bit xulrunner-sdk.
             shutil.copy(builds[0].moz_xpidl, build.moz_xpidl)
-        build.xulrunner_sdk()
+        if not exists(build.moz_xpidl):
+            raise Exception("No xpidl found in the XULRunner SDK: %r" % (build.moz_xpidl, ))
     
         # checkout
         build.checkout()
