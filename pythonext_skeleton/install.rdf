@@ -16,7 +16,7 @@
         <em:contributor>Malek Hadj-Ali</em:contributor>
 
         <em:homepageURL>https://code.google.com/p/pythonext/</em:homepageURL>
-        <em:updateURL>https://pythonext.googlecode.com/hg/updates.rdf</em:updateURL>
+        <em:updateURL>https://pythonext.googlecode.com/hg/updates_$(UPDATE_TARGAT_PLATFORM).rdf</em:updateURL>
         <em:iconURL>chrome://pythonext/skin/python-powered_32x32.png</em:iconURL>
 
         <em:targetApplication>

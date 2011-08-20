@@ -129,11 +129,19 @@ class Build(object):
         self.pythonext_lib_dir = join(self.pythonext_dir, "pylib")
         self.pythonext_python_dir = join(self.pythonext_dir, "python")
 
+        if sys.platform.startswith("win"):
+                update_target_platform = "winnt"
+        elif sys.platform == "darwin":
+                update_target_platform = "darwin"
+        elif sys.platform.startswith("linux"):
+                update_target_platform = os.uname()[4]
+
         self.package_conf = {
             "MOZ_APP_VERSION": "%s" % (XULRUNNER_SDK_VERSION, ),
             "PYTHONEXT_VERSION": "%s.%s" % (XULRUNNER_SDK_VERSION, time.strftime("%Y%m%d", time.gmtime())),
             "PYTHON_VERSION": ".".join(map(str, sys.version_info[:3])),
             "TARGET_PLATFORMS": [],
+            "UPDATE_TARGAT_PLATFORM": update_target_platform,
         }
 
         try:
@@ -288,7 +296,8 @@ class Build(object):
         install_rdf_path = abspath(join(self.pythonext_dir, "install.rdf"))
         content = file(install_rdf_path, "r").read()
         for key in ["PYTHONEXT_VERSION", "PYTHON_VERSION",
-                    "RDF_TARGET_PLATFORMS", "MOZ_APP_VERSION"]:
+                    "RDF_TARGET_PLATFORMS", "MOZ_APP_VERSION",
+                    "UPDATE_TARGAT_PLATFORM"]:
             value = self.package_conf.get(key)
             content = content.replace("$(%s)" % key, value)
         file(install_rdf_path, "w").write(content)
