@@ -15,7 +15,8 @@
         <em:contributor>Mark Hammond</em:contributor>
         <em:contributor>Malek Hadj-Ali</em:contributor>
 
-        <em:homepageURL>http://pyxpcomext.mozdev.org</em:homepageURL>
+        <em:homepageURL>https://code.google.com/p/pythonext/</em:homepageURL>
+        <em:updateURL>https://pythonext.googlecode.com/hg/updates.rdf</em:updateURL>
         <em:iconURL>chrome://pythonext/skin/python-powered_32x32.png</em:iconURL>
 
         <em:targetApplication>
