@@ -346,6 +346,8 @@ class WinBuild(Build):
 
     def _set_paths(self, basedir=None):
         Build._set_paths(self, basedir=basedir)
+        # xpidl is an exe on Windows.
+        self.moz_xpidl = realpath(join(self.xulrunner_bin_dir, "xpidl.exe"))
         self.pythonext_python_lib_dir = join(self.pythonext_python_dir, "Lib")
 
     def _libs(self):
