@@ -22,7 +22,7 @@ xulrunner_link_for_platform = {
         "Linux-x86_64":   "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-aurora/xulrunner-9.0a2.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
-hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_8_0_0 pyxpcom"}]
+hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_9_0_0 pyxpcom"}]
 
 py_install_path = abspath("py_install")
 py_library_path = join(py_install_path, "lib")
@@ -118,7 +118,7 @@ class Build(object):
         self.pyxpcom_dir = join(self.basedir, "pyxpcom")
         self.pyxpcom_obj_dir = join(self.pyxpcom_dir, "obj_pyxpcom")
         self.build_bin_dir = join(self.pyxpcom_obj_dir, "dist", "bin")
-        self.moz_xpidl = realpath(join(self.xulrunner_bin_dir, "xpidl"))
+        self.moz_xpidl = realpath(join(self.xulrunner_dir, "sdk", "bin", "xpidl.py"))
         self.moz_idl_dir = join(self.xulrunner_dir, "idl")
         self.build_lib_dir = join(self.pyxpcom_obj_dir, "dist", "lib")
         self.build_comp_dir = join(self.build_bin_dir, "components")
@@ -358,8 +358,6 @@ class WinBuild(Build):
 
     def _set_paths(self, basedir=None):
         Build._set_paths(self, basedir=basedir)
-        # xpidl is an exe on Windows.
-        self.moz_xpidl = realpath(join(self.xulrunner_bin_dir, "xpidl.exe"))
         self.pythonext_python_lib_dir = join(self.pythonext_python_dir, "Lib")
 
     def _libs(self):
@@ -575,10 +573,6 @@ def main():
     
         # download xulrunner
         build.xulrunner_sdk()
-        if isinstance(build, MacBuild_x86) and not exists(build.moz_xpidl) and \
-           len(builds) == 2:
-            # Need to copy xpidl from the 64-bit xulrunner-sdk.
-            shutil.copy(builds[0].moz_xpidl, build.moz_xpidl)
         if not exists(build.moz_xpidl):
             raise Exception("No xpidl found in the XULRunner SDK: %r" % (build.moz_xpidl, ))
     
