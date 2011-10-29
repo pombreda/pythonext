@@ -23,8 +23,8 @@
             <Description>
                 <!-- XULRunner -->
                 <em:id>toolkit@mozilla.org</em:id>
-                <em:minVersion>6.0a1</em:minVersion>
-                <em:maxVersion>6.*</em:maxVersion>
+                <em:minVersion>$(TOOLKIT_MIN_VERSION)</em:minVersion>
+                <em:maxVersion>$(TOOLKIT_MAX_VERSION)</em:maxVersion>
             </Description>
         </em:targetApplication>
 

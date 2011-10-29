@@ -138,10 +138,12 @@ class Build(object):
 
         self.package_conf = {
             "MOZ_APP_VERSION": "%s" % (XULRUNNER_SDK_VERSION, ),
+            "TOOLKIT_MIN_VERSION": "%sa1" % (".".join(XULRUNNER_SDK_VERSION.split(".")[:2]), ),
+            "TOOLKIT_MAX_VERSION": "%s.*" % (XULRUNNER_SDK_VERSION.split(".")[0], ),
             "PYTHONEXT_VERSION": "%s.%s" % (XULRUNNER_SDK_VERSION, time.strftime("%Y%m%d", time.gmtime())),
             "PYTHON_VERSION": ".".join(map(str, sys.version_info[:3])),
             "TARGET_PLATFORMS": [],
-            "UPDATE_TARGAT_PLATFORM": update_target_platform,
+            "UPDATE_TARGET_PLATFORM": update_target_platform,
         }
 
         try:
@@ -297,7 +299,8 @@ class Build(object):
         content = file(install_rdf_path, "r").read()
         for key in ["PYTHONEXT_VERSION", "PYTHON_VERSION",
                     "RDF_TARGET_PLATFORMS", "MOZ_APP_VERSION",
-                    "UPDATE_TARGAT_PLATFORM"]:
+                    "UPDATE_TARGET_PLATFORM",
+                    "TOOLKIT_MIN_VERSION", "TOOLKIT_MAX_VERSION"]:
             value = self.package_conf.get(key)
             content = content.replace("$(%s)" % key, value)
         file(install_rdf_path, "w").write(content)
