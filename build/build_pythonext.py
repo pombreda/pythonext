@@ -12,14 +12,14 @@ import re
 
 debug = False
 
-XULRUNNER_SDK_VERSION = "9.0.0"
+XULRUNNER_SDK_VERSION = "8.0.0"
 
 xulrunner_link_for_platform = {
-        "win32":          "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-aurora/xulrunner-9.0a2.en-US.win32.sdk.zip",
-        "Darwin-x86":     "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-aurora/xulrunner-9.0a2.en-US.mac-i386.sdk.tar.bz2",
-        "Darwin-x86_64":  "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-aurora/xulrunner-9.0a2.en-US.mac-x86_64.sdk.tar.bz2",
-        "Linux-i686":     "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-aurora/xulrunner-9.0a2.en-US.linux-i686.sdk.tar.bz2",
-        "Linux-x86_64":   "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-mozilla-aurora/xulrunner-9.0a2.en-US.linux-x86_64.sdk.tar.bz2",
+        "win32":          "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.win32.sdk.zip",
+        "Darwin-x86":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.mac-i386.sdk.tar.bz2",
+        "Darwin-x86_64":  "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.mac-x86_64.sdk.tar.bz2",
+        "Linux-i686":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.linux-i686.sdk.tar.bz2",
+        "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
 hg_cmds = ["hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_8_0_0 pyxpcom"]
