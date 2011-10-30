@@ -22,7 +22,7 @@ xulrunner_link_for_platform = {
         "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/7.0.1/sdk/xulrunner-7.0.1.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
-hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom"}]
+hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom -r TAG_MOZILLA_7_0_0"}]
 
 py_install_path = abspath("py_install")
 py_library_path = join(py_install_path, "lib")
