@@ -22,7 +22,7 @@ xulrunner_link_for_platform = {
         "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/7.0.1/sdk/xulrunner-7.0.1.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
-hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom -r TAG_MOZILLA_7_0_0"}]
+hg_cmds = ["hg clone http://hg.mozilla.org/pyxpcom pyxpcom -r TAG_MOZILLA_7_0_0"]
 
 py_install_path = abspath("py_install")
 py_library_path = join(py_install_path, "lib")
@@ -180,9 +180,9 @@ class Build(object):
                 if delete_var in env:
                     del env[delete_var]
             for cmd in hg_cmds:
-                args = cmd.pop("args")
-                subprocess.check_call(args.split(" "), cwd=self.basedir,
-                                      env=env, **cmd)
+                subprocess.check_call(cmd.split(" "),
+                                      cwd=self.basedir,
+                                      env=env)
 
     def patch(self):
         patches_path = abspath(join("..", "patches", patches_directory))
