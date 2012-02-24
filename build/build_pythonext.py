@@ -12,17 +12,17 @@ import re
 
 debug = False
 
-XULRUNNER_SDK_VERSION = "8.0.0"
+XULRUNNER_SDK_VERSION = "10.0.0"
 
 xulrunner_link_for_platform = {
-        "win32":          "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.win32.sdk.zip",
-        "Darwin-x86":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.mac-i386.sdk.tar.bz2",
-        "Darwin-x86_64":  "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.mac-x86_64.sdk.tar.bz2",
-        "Linux-i686":     "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.linux-i686.sdk.tar.bz2",
-        "Linux-x86_64":   "http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/8.0b5/sdk/xulrunner-8.0b5.en-US.linux-x86_64.sdk.tar.bz2",
+        "win32":          "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.win32.sdk.zip",
+        "Darwin-x86":     "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.mac-i386.sdk.tar.bz2",
+        "Darwin-x86_64":  "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.mac-x86_64.sdk.tar.bz2",
+        "Linux-i686":     "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.linux-i686.sdk.tar.bz2",
+        "Linux-x86_64":   "http://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
-hg_cmds = ["hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_8_0_0 pyxpcom"]
+hg_cmds = ["hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_10_0_0 pyxpcom"]
 
 py_install_path = abspath("py_install")
 py_library_path = join(py_install_path, "lib")
@@ -575,12 +575,6 @@ def main():
     
         # download xulrunner
         build.xulrunner_sdk()
-        if isinstance(build, MacBuild_x86) and not exists(build.moz_xpidl) and \
-           len(builds) == 2:
-            # Need to copy xpidl from the 64-bit xulrunner-sdk.
-            shutil.copy(builds[0].moz_xpidl, build.moz_xpidl)
-        if not exists(build.moz_xpidl):
-            raise Exception("No xpidl found in the XULRunner SDK: %r" % (build.moz_xpidl, ))
     
         # checkout
         build.checkout()
