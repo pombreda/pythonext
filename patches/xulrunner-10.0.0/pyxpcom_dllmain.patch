@@ -1,0 +1,102 @@
+Deleted - moved this specific Python path loading into a separate boot loader.
+===================================================================
+RCS file: /cvsroot/mozilla/xpcom/src/dllmain.cpp,v
+retrieving revision 1.3
+diff -d -urN dllmain.cpp
+--- xpcom/src/dllmain.cpp	2008-04-22 16:51:39.000000000 +0200
++++ xpcom/src/dllmain.cpp.new	2008-04-23 10:13:45.000000000 +0200
+@@ -96,60 +96,6 @@
+ 	PR_Unlock(g_lockMain);
+ }
+ 
+-// Ensure that any paths guaranteed by this package exist on sys.path
+-// Only called once as we are first loaded into the process.
+-void AddStandardPaths()
+-{
+-	// Put {bin}\Python on the path if it exists.
+-	nsresult rv;
+-	nsCOMPtr<nsIFile> aFile;
+-	// XXX - this needs more thought for XULRunner - we want to stick the global
+-	// 'python' dir on sys.path (for xpcom etc), but also want to support a way
+-	// of adding a local application directory (in the case of xulrunner) too.
+-	// NS_XPCOM_CURRENT_PROCESS_DIR is the XULRunner app dir (ie, where application.ini lives)
+-	// NS_GRE_DIR is the 'bin' dir for XULRunner itself.
+-	rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(aFile));
+-	if (NS_FAILED(rv)) {
+-		PyXPCOM_LogError("The Python XPCOM loader could not locate the 'bin' directory");
+-		return;
+-	}
+-	aFile->Append(NS_LITERAL_STRING("python"));
+-	nsAutoString pathBuf;
+-	aFile->GetPath(pathBuf);
+-	PyObject *obPath = PySys_GetObject("path");
+-	if (!obPath) {
+-		PyXPCOM_LogError("The Python XPCOM loader could not get the Python sys.path variable");
+-		return;
+-	}
+-	// XXX - this should use the file-system encoding...
+-	NS_LossyConvertUTF16toASCII pathCBuf(pathBuf);
+-#ifdef NS_DEBUG
+-	PR_fprintf(PR_STDERR,"The Python XPCOM loader is adding '%s' to sys.path\n",
+-	           pathCBuf.get());
+-#endif
+-	PyObject *newStr = PyString_FromString(pathCBuf.get());
+-	PyList_Insert(obPath, 0, newStr);
+-	Py_XDECREF(newStr);
+-	// And now try and get Python to process this directory as a "site dir" 
+-	// - ie, look for .pth files, etc
+-	nsCAutoString cmdBuf(NS_LITERAL_CSTRING("import site;site.addsitedir(r'"));
+-	cmdBuf.Append(pathCBuf);
+-	cmdBuf.Append(NS_LITERAL_CSTRING("')\n"));
+-	if (0 != PyRun_SimpleString((char *)cmdBuf.get())) {
+-		PyXPCOM_LogError("The directory '%s' could not be added as a site directory", pathCBuf.get());
+-		PyErr_Clear();
+-	}
+-	// and somewhat like Python itself (site, citecustomize), we attempt 
+-	// to import "sitepyxpcom" ignoring ImportError
+-	PyObject *mod = PyImport_ImportModule("sitepyxpcom");
+-	if (NULL==mod) {
+-		if (!PyErr_ExceptionMatches(PyExc_ImportError))
+-			PyXPCOM_LogError("Failed to import 'sitepyxpcom'");
+-		PyErr_Clear();
+-	} else
+-		Py_DECREF(mod);
+-}
+-
+ static PRBool bIsInitialized = PR_FALSE;
+ // Our 'entry point' into initialization - just call this any time you
+ // like, and the world will be setup!
+@@ -164,23 +110,6 @@
+ 	if (bIsInitialized)
+ 		return; // another thread beat us to the init.
+ 
+-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+-	/* *sob* - seems necessary to open the .so as RTLD_GLOBAL.  Without
+-	this we see:
+-	    Traceback (most recent call last):
+-	      File "<string>", line 1, in ?
+-	      File "/usr/lib/python2.4/logging/__init__.py", line 29, in ?
+-	        import sys, os, types, time, string, cStringIO, traceback
+-	    ImportError: /usr/lib/python2.4/lib-dynload/time.so: undefined
+-	                                                symbol: PyExc_IOError
+-
+-	On osx, ShaneC writes that is it unnecessary (and fails anyway since 
+-	PYTHON_SO is wrong.)  More clues about this welcome!
+-	*/
+-
+-	dlopen(PYTHON_SO,RTLD_NOW | RTLD_GLOBAL);
+-#endif
+-
+ 	PRBool bDidInitPython = !Py_IsInitialized(); // well, I will next line, anyway :-)
+ 	if (bDidInitPython) {
+ 		NS_TIMELINE_START_TIMER("PyXPCOM: Python initializing");
+@@ -217,9 +146,6 @@
+ 		Py_XDECREF(str);
+ 	}
+ 
+-	// Add the standard extra paths we assume
+-	AddStandardPaths();
+-
+ 	// The exception object pyxpcom uses.
+ 	if (PyXPCOM_Error == NULL) {
+ 		PRBool rc = PR_FALSE;
