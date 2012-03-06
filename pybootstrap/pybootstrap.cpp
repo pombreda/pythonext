@@ -256,19 +256,35 @@ InitializeModule(nsIFile *extensionDir)
 static int pyxpcom_dependant_library_loader()
 {
     // Load dependent libraries
-    nsresult rv;
     nsCOMPtr<nsIFile> extensionPath;
-    const char *prop = "ProfD";
-    NS_GetSpecialDirectory(prop, getter_AddRefs(extensionPath));
-    if (!extensionPath)
-        return NS_ERROR_FAILURE;
-    rv = extensionPath->AppendNative(NS_LITERAL_CSTRING("extensions"));
-    if (NS_FAILED(rv))
+    nsresult rv = NS_ERROR_FILE_NOT_FOUND;
+    PRBool locationExists = PR_FALSE;
+    char const *const propArray[] = {"ProfD", "GreD", NULL};
+    for (char const *const *prop = propArray; *prop; ++prop) {
+        NS_GetSpecialDirectory(*prop, getter_AddRefs(extensionPath));
+        if (!extensionPath) {
+            rv = NS_ERROR_FILE_NOT_FOUND;
+            continue;
+        }
+        rv = extensionPath->AppendNative(NS_LITERAL_CSTRING("extensions"));
+        if (NS_FAILED(rv))
+            continue;
+        rv = extensionPath->AppendNative(NS_LITERAL_CSTRING("pythonext@mozdev.org"));
+        if (NS_FAILED(rv))
+            continue;
+        rv = extensionPath->Exists(&locationExists);
+        if (NS_FAILED(rv))
+            continue;
+        if (!locationExists) {
+            rv = NS_ERROR_FILE_NOT_FOUND;
+            continue;
+        }
+        break;
+    }
+    if (!locationExists) {
         return rv;
-    rv = extensionPath->AppendNative(NS_LITERAL_CSTRING("pythonext@mozdev.org"));
-    if (NS_FAILED(rv))
-        return rv;
-   
+    }
+
     if (PR_LOG_TEST(pyBootstrapLog, PR_LOG_DEBUG)) {
         nsCAutoString path;
         rv = extensionPath->GetNativePath(path);
