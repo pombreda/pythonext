@@ -258,7 +258,7 @@ static int pyxpcom_dependant_library_loader()
     // Load dependent libraries
     nsCOMPtr<nsIFile> extensionPath;
     nsresult rv = NS_ERROR_FILE_NOT_FOUND;
-    PRBool locationExists = PR_FALSE;
+    bool locationExists = false;
     char const *const propArray[] = {"ProfD", "GreD", NULL};
     for (char const *const *prop = propArray; *prop; ++prop) {
         NS_GetSpecialDirectory(*prop, getter_AddRefs(extensionPath));
