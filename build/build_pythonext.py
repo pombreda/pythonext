@@ -12,17 +12,18 @@ import re
 
 debug = False
 
-XULRUNNER_SDK_VERSION = "10.0.0"
+XULRUNNER_SDK_VERSION = "17.0.0"
 
 xulrunner_link_for_platform = {
-        "win32":          "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.win32.sdk.zip",
-        "Darwin-x86":     "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.mac-i386.sdk.tar.bz2",
-        "Darwin-x86_64":  "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.mac-x86_64.sdk.tar.bz2",
-        "Linux-i686":     "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.linux-i686.sdk.tar.bz2",
-        "Linux-x86_64":   "ftp://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/10.0.2/sdk/xulrunner-10.0.2.en-US.linux-x86_64.sdk.tar.bz2",
+        "win32":          "ftp://ftp.mozilla.org/pub/xulrunner/releases/17.0/sdk/xulrunner-17.0.en-US.win32.sdk.zip",
+        "Darwin-x86":     "ftp://ftp.mozilla.org/pub/xulrunner/releases/17.0/sdk/xulrunner-17.0.en-US.mac-i386.sdk.tar.bz2",
+        "Darwin-x86_64":  "ftp://ftp.mozilla.org/pub/xulrunner/releases/17.0/sdk/xulrunner-17.0.en-US.mac-x86_64.sdk.tar.bz2",
+        "Linux-i686":     "ftp://ftp.mozilla.org/pub/xulrunner/releases/17.0/sdk/xulrunner-17.0.en-US.linux-i686.sdk.tar.bz2",
+        "Linux-x86_64":   "ftp://ftp.mozilla.org/pub/xulrunner/releases/17.0/sdk/xulrunner-17.0.en-US.linux-x86_64.sdk.tar.bz2",
 }
 
-hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_10_0_0 pyxpcom"}]
+#hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom -r TAG_MOZILLA_10_0_0 pyxpcom"}]
+hg_cmds = [{"args": "hg clone http://hg.mozilla.org/pyxpcom pyxpcom"}]
 
 py_install_path = abspath("py_install")
 py_library_path = join(py_install_path, "lib")
@@ -320,7 +321,7 @@ class Build(object):
                     join(self.pythonext_comp_dir, self._dll_name("pybootstrap")))
 
     def _python(self):
-        shutil.copytree(py_install_path, self.pythonext_python_dir, symlinks=True)
+        shutil.copytree(py_install_path, self.pythonext_python_dir, symlinks=False)
         # bin/python is good to keep, for executing as a subprocess.
         #trim(join(self.pythonext_python_dir, "bin"))
         trim(join(self.pythonext_python_lib_dir, "idlelib"))
