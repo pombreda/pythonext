@@ -88,7 +88,7 @@ static char const *const kPyXPCOMLibraries[] =
 {
     MOZ_DLL_PREFIX "pyxpcom" MOZ_DLL_SUFFIX,
     MOZ_DLL_PREFIX "pyloader" MOZ_DLL_SUFFIX,
-    nsnull
+    nullptr
 };
 
 #if defined(XP_UNIX)
